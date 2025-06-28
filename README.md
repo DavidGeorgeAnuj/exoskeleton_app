@@ -8,7 +8,7 @@ The project is structured as a monorepo containing:
 - **Flutter Mobile Application** – Designed to be built on a separate development machine.
 - **Web Dashboard (`web/`)** – Designed to be deployed on the Raspberry Pi.
 
-> *(System architecture diagram placeholder: add with `![System Architecture Diagram](./assets/system_diagram.png)` after uploading the image to an `assets/` folder.)*
+![diagram](https://github.com/user-attachments/assets/e7baf7b0-6c31-403e-a73b-a308a4b95b3f)
 
 ---
 
