@@ -1,206 +1,183 @@
-Ah, my apologies for the misunderstanding and the incomplete response earlier. I understand now. You want the final, complete README.md file, ready for your GitHub repository, formatted professionally in Markdown.
-
-Here is the complete and final README.md file, incorporating all the best elements we've discussed.
-
-Real-Time Control System for a Rehabilitation Exoskeleton
+# Real-Time Control System for a Rehabilitation Exoskeleton
 
 This repository contains the complete software ecosystem developed during a research internship at the Indian Institute of Technology (IIT) Goa. The system provides a real-time interface for controlling and monitoring a robotic exoskeleton.
 
 The project is structured as a monorepo containing:
 
-The Python Back-End Server (server.py) - Designed for deployment on the Raspberry Pi.
+- **Python Back-End Server (`server.py`)** – Designed for deployment on the Raspberry Pi.
+- **Flutter Mobile Application** – Designed to be built on a separate development machine.
+- **Web Dashboard (`web/`)** – Designed to be deployed on the Raspberry Pi.
 
-The Flutter Mobile Application - Designed to be built on a separate development machine.
+> *(System architecture diagram placeholder: add with `![System Architecture Diagram](./assets/system_diagram.png)` after uploading the image to an `assets/` folder.)*
 
-A Web Dashboard (web/) - Designed to be deployed on the Raspberry Pi.
+---
 
-(Space for Diagram)
-(Replace this line with ![System Architecture Diagram](./assets/system_diagram.png) after adding the image to an assets folder.)
+## Core Features
 
-✨ Core Features
+- **High-Performance Asynchronous Server**: Built with `asyncio`, the Python server handles multiple clients and high-frequency hardware I/O in real time.
 
-High-Performance Asynchronous Server: A robust Python server built with asyncio to handle multiple clients and high-frequency hardware I/O without blocking.
+- **Real-Time Bidirectional Communication**: WebSocket protocol is used for low-latency control and telemetry.
 
-Real-Time Bidirectional Communication: Low-latency control and data telemetry using the WebSocket protocol.
+- **Advanced Safety Framework**: A stateful, server-authoritative RBAC (Role-Based Access Control) system prevents command race conditions.
 
-Advanced Safety Framework: A stateful, server-authoritative Admin/User Role-Based Access Control (RBAC) system designed to eliminate command race conditions.
+- **Turnkey Operational System**: Server auto-launches on Raspberry Pi boot and reaches a ready state in under two seconds.
 
-Turnkey Operational System: The server is configured as an auto-launching service on the Raspberry Pi, enabling a system-ready state in under two seconds from boot.
+- **Self-Hosted Ecosystem**: The server and web dashboard are fully hosted on the Raspberry Pi—no internet required.
 
-Self-Hosted Ecosystem: The entire back-end, including the web client, is hosted on the Raspberry Pi, creating a "plug-and-play" appliance that requires no internet access.
+- **Rich Data Visualization & Export**: Client applications feature live plots and one-touch CSV data export.
 
-Rich Data Visualization & Export: The client applications feature interactive, real-time plotting and a one-touch CSV export for offline analysis.
+---
 
-🏛️ Project Structure
+## Project Structure
 
-This repository contains all necessary components for the software ecosystem.
-
-Generated code
+```
 .
-├── server.py             # The core Python WebSocket server for the Raspberry Pi
-├── lib/                  # Flutter application source code (Dart)
-│   ├── main.dart         # Main UI, state management, and WebSocket logic
-│   ├── plot_screen.dart    # UI for real-time data visualization
-│   └── settings_screen.dart # UI for IP config and role management
-├── android/              # Android-specific build files for Flutter
-├── web/                  # Web dashboard source files
-├── pubspec.yaml          # Flutter project dependencies
-└── README.md             # This file
+├── server.py               # Core Python WebSocket server for Raspberry Pi
+├── lib/                    # Flutter app source code
+│   ├── main.dart
+│   ├── plot_screen.dart
+│   └── settings_screen.dart
+├── android/                # Flutter Android build system
+├── web/                    # Web dashboard UI
+├── pubspec.yaml            # Flutter dependency manager
+└── README.md               # This file
+```
 
-🚀 Server Setup and Deployment (on Raspberry Pi)
+---
 
-This is the primary guide to deploy the core control server and web dashboard onto the Raspberry Pi.
+## Server Setup and Deployment (Raspberry Pi)
 
-Prerequisites
+### Prerequisites
 
-A Raspberry Pi (3B+ or newer recommended) with Raspberry Pi OS.
+- Raspberry Pi (3B+ or newer) with Raspberry Pi OS
+- Compatible CAN Hat (configured)
+- T-Motor actuator connected over CAN
+- Python 3.8+
 
-A compatible CAN Hat configured and enabled on the OS level.
+### Installation Steps
 
-T-Motor actuator connected via the CAN bus.
+1. **Transfer Required Files to Raspberry Pi**  
+   Copy the following to `/home/pi/exoskeleton_server`:
+   - `server.py`
+   - `web/` folder
 
-Python 3.8+ installed.
+2. **Configure CAN Interface**  
+   Edit `/boot/config.txt` as needed for your CAN Hat. After reboot:
+   ```bash
+   sudo ip link set can0 up type can bitrate 1000000
+   ```
 
-Installation Steps
+3. **Set Up Python Environment**
+   ```bash
+   cd /home/pi/exoskeleton_server
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
 
-Transfer Required Files to Raspberry Pi:
-You only need the server-side components. Transfer the following from this repository to a directory on your Raspberry Pi (e.g., /home/pi/exoskeleton_server):
+4. **Install Dependencies**
+   ```bash
+   pip install websockets numpy
+   pip install git+https://github.com/mit-biomimetics/TMotorCANControl.git
+   ```
 
-server.py
+5. **Configure the Server**
+   Open `server.py` and:
+   - Set `HOST` to your Pi's static IP
+   - Set a strong `ADMIN_PASSWORD`
 
-web/ (the entire folder containing index.html, etc.)
+6. **Run Manually for Testing**
+   ```bash
+   python server.py
+   ```
 
-Configure CAN Interface:
-Ensure your can0 interface is enabled. This typically involves editing /boot/config.txt. Follow your CAN Hat manufacturer's instructions. After rebooting, bring the interface up:
+7. **(Optional) Deploy as a Service**
+   Create the systemd service file:
+   ```bash
+   sudo nano /etc/systemd/system/exoskeleton_server.service
+   ```
 
-Generated bash
-sudo ip link set can0 up type can bitrate 1000000
-IGNORE_WHEN_COPYING_START
-content_copy
-download
-Use code with caution.
-Bash
-IGNORE_WHEN_COPYING_END
+   Paste:
+   ```ini
+   [Unit]
+   Description=Exoskeleton Control WebSocket Server
+   After=network.target
 
-Set up Python Environment:
-Navigate to your project directory on the Pi:
+   [Service]
+   User=pi
+   WorkingDirectory=/home/pi/exoskeleton_server
+   ExecStart=/home/pi/exoskeleton_server/venv/bin/python server.py
+   Restart=always
 
-Generated bash
-cd /home/pi/exoskeleton_server
-python3 -m venv venv
-source venv/bin/activate
-IGNORE_WHEN_COPYING_START
-content_copy
-download
-Use code with caution.
-Bash
-IGNORE_WHEN_COPYING_END
+   [Install]
+   WantedBy=multi-user.target
+   ```
 
-Install Python Dependencies:
+   Enable and start:
+   ```bash
+   sudo systemctl enable exoskeleton_server.service
+   sudo systemctl start exoskeleton_server.service
+   sudo systemctl status exoskeleton_server.service
+   ```
 
-Generated bash
-pip install websockets numpy
-pip install git+https://github.com/mit-biomimetics/TMotorCANControl.git
-IGNORE_WHEN_COPYING_START
-content_copy
-download
-Use code with caution.
-Bash
-IGNORE_WHEN_COPYING_END
+> You may also use `python3 -m http.server` to host the `web/` directory as an HTTP dashboard.
 
-Configure the Server:
+---
 
-Open server.py for editing: nano server.py.
+## Flutter Client Setup (Mobile App)
 
-Update the HOST variable to your Raspberry Pi's static IP address.
+To build and run the Flutter mobile client:
 
-Set a strong, unique ADMIN_PASSWORD.
+### Prerequisites
+- Flutter SDK installed
+- Android SDK + Platform tools
+- ADB installed
+- Connected Android device or emulator
 
-Run the Server Manually (for Testing):
+### Steps
+1. Clone this repository:
+   ```bash
+   git clone https://github.com/your-username/exoskeleton_app.git
+   cd exoskeleton_app
+   ```
 
-Generated bash
-python server.py
-IGNORE_WHEN_COPYING_START
-content_copy
-download
-Use code with caution.
-Bash
-IGNORE_WHEN_COPYING_END
+2. Install dependencies:
+   ```bash
+   flutter pub get
+   ```
 
-The server should start on your configured IP at port 8765. You can now connect with a client to test.
+3. Set server IP:  
+   Edit `_serverIp` in `lib/main.dart` to match your Raspberry Pi’s IP.
 
-(Recommended) Deploy as an Auto-Launching Service:
-To create a robust, "turnkey" system, configure the server to run automatically on boot using systemd.
+4. Build and deploy:
+   ```bash
+   flutter run
+   ```
 
-Create a service file: sudo nano /etc/systemd/system/exoskeleton_server.service
+---
 
-Paste the following configuration, updating the paths to match your setup:
+## Project Artifacts & Appendices
 
-Generated ini
-[Unit]
-Description=Exoskeleton Control WebSocket Server
-After=network.target
+You can access supplementary files and artifacts using the links below:
 
-[Service]
-User=pi
-WorkingDirectory=/home/pi/exoskeleton_server
-ExecStart=/home/pi/exoskeleton_server/venv/bin/python server.py
-Restart=always
+- [Appendix A: Application Demo Videos](https://drive.google.com/drive/folders/1Df3j8A_1_ootU3SVb6Kt8D-iakJCMEIw?usp=drive_link)
 
-[Install]
-WantedBy=multi-user.target
-IGNORE_WHEN_COPYING_START
-content_copy
-download
-Use code with caution.
-Ini
-IGNORE_WHEN_COPYING_END
+- [Appendix B: System Diagrams and Setup Images](https://drive.google.com/drive/folders/1OTffhjF-SXtsBoFuVkU0myWLeUjoNKjQ?usp=drive_link)
 
-Enable and start the service:
+- [Appendix C: Presentation and Project Documentation](https://drive.google.com/drive/folders/10Lh98yQQELuLaW8o34tGA-WfBLv5QXZ2?usp=drive_link)
 
-Generated bash
-sudo systemctl enable exoskeleton_server.service
-sudo systemctl start exoskeleton_server.service
-sudo systemctl status exoskeleton_server.service
-IGNORE_WHEN_COPYING_START
-content_copy
-download
-Use code with caution.
-Bash
-IGNORE_WHEN_COPYING_END
+- [Appendix D: Android Application Build Files (.apk)](https://drive.google.com/drive/folders/13lT7tyjh6SGhUyu3BfOKSJrkctPwtVil?usp=drive_link)
 
-(Note: You will also need a simple HTTP server to serve the web/ directory. python -m http.server is a simple option that can also be run as a service.)
+---
 
-📱 (Optional) Flutter Client Setup
+## Acknowledgements
 
-The included Flutter application serves as a comprehensive mobile client. It should be built on a separate development computer (Windows/macOS/Linux) with the Flutter environment pre-installed.
+This project was developed as part of a research internship at the Indian Institute of Technology (IIT) Goa. It supports a research initiative involving collaboration between IIT Goa and the National Institute of Technology Karnataka (NITK), funded by the DST-SERB.
 
-To build the app, the development machine must have a fully configured Flutter environment, including the Flutter SDK, the Android SDK and platform tools, and a working Android Debug Bridge (ADB) connection to a physical device or emulator. The setup process is as follows: first, clone the repository to your development machine using git clone. Next, run flutter pub get in the project's root directory to download all the necessary library dependencies. Before building, you must update the server's IP address by editing the _serverIp variable in the lib/main.dart file to match your Raspberry Pi's static IP. Finally, with a device connected, initiate the build and deployment by running the flutter run command. This will compile the app, install the resulting APK on your target device via ADB, and launch it.
+- **Mentor**: Dr. Sheron Figarado (IIT Goa)  
+- **Author**: David George Anuj (Rajagiri School of Engineering and Technology)
 
-📂 Project Artifacts & Appendices
+---
 
-The following links provide supplementary materials for this project, including demonstration videos, diagrams, and documentation.
+## License
 
-[Appendix A: Application Demo Videos]
-(https://drive.google.com/drive/folders/1Df3j8A_1_ootU3SVb6Kt8D-iakJCMEIw?usp=drive_link)
-
-[Appendix B: System Diagrams and Setup Images]
-(https://drive.google.com/drive/folders/1OTffhjF-SXtsBoFuVkU0myWLeUjoNKjQ?usp=drive_link)
-
-[Appendix C: Presentation and Project Documentation]
-(https://drive.google.com/drive/folders/10Lh98yQQELuLaW8o34tGA-WfBLv5QXZ2?usp=drive_link)
-
-[Appendix D: Android Application Build Files]
-(https://drive.google.com/drive/folders/13lT7tyjh6SGhUyu3BfOKSJrkctPwtVil?usp=drive_link)
-
-Acknowledgements
-
-This project was developed as part of a research internship at the Indian Institute of Technology (IIT) Goa. It supports a research initiative involving expertise from both IIT Goa and the National Institute of Technology Karnataka (NITK), funded by the DST-SERB.
-
-Mentor: Dr. Sheron Figarado (IIT Goa)
-
-Author: David George Anuj (Rajagiri School of Engineering and Technology)
-
-📜 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License. See the `LICENSE` file for details.
